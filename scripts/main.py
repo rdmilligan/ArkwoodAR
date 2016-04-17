@@ -2,13 +2,13 @@
 # GNU GENERAL PUBLIC LICENSE Version 3 (full notice can be found at https://github.com/rdmilligan/ArkwoodAR)
 
 from OpenGL.GL import *
-from OpenGL.GLUT import *
 from OpenGL.GLU import *
-import numpy as np
+from OpenGL.GLUT import *
 import cv2
 from PIL import Image
 from webcam import Webcam
-from templatematching import TemplateMatching
+from configprovider import ConfigProvider
+from features import Features
 
 class ArkwoodAR:
 
@@ -18,8 +18,11 @@ class ArkwoodAR:
         self.webcam_one = Webcam(0)
         self.webcam_two = Webcam(1)
 
-        # initialise template matching
-        self.template_matching = TemplateMatching()
+        # initialise config
+        self.config_provider = ConfigProvider()
+
+        # initialise features
+        self.features = Features(self.config_provider)
 
         # initialise texture
         self.texture_background = None
@@ -46,22 +49,36 @@ class ArkwoodAR:
     def _draw_scene(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glLoadIdentity()
+        window_half_width = glutGet(GLUT_WINDOW_WIDTH) / 2
+        window_height = glutGet(GLUT_WINDOW_HEIGHT)
 
         # get image from webcams
         image_one = self.webcam_one.get_current_frame()
         image_two = self.webcam_two.get_current_frame()
 
-        # create stereoscopic image
-        stereo_image = np.concatenate((image_one, image_two), axis=1)
+        # detect feature in images
+        detection = self.features.detect(image_one, image_two) 
 
-        # update image with template matching
-        stereo_image = self.template_matching.update_image(stereo_image)
+        # render first image
+        glViewport(0, 0, window_half_width, window_height)
 
-        # handle background
-        self._handle_background(stereo_image)
+        if detection:
+            image_one = self.features.render(image_one, detection[0])
 
+        self._handle_background(image_one)
+
+        # render second image
+        glViewport(window_half_width, 0, window_half_width, window_height)
+
+        if detection:
+            image_two = self.features.render(image_two, detection[1])
+
+        self._handle_background(image_two)
+
+        # swap buffers
         glutSwapBuffers()
 
+    # handle background
     def _handle_background(self, image):
 
         # convert image to OpenGL texture format
@@ -95,7 +112,7 @@ class ArkwoodAR:
         glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH)
         glutInitWindowSize(640, 360)
         glutInitWindowPosition(100, 100)
-        self.window_id = glutCreateWindow('ArkwoodAR')
+        glutCreateWindow('ArkwoodAR')
         glutDisplayFunc(self._draw_scene)
         glutIdleFunc(self._draw_scene)
         self._init_gl()
