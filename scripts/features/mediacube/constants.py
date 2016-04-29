@@ -6,9 +6,9 @@ MARKER_ONE = 'marker_one'
 MARKER_TWO = 'marker_two'
 
 # texture constants
-TEXTURE_VIDEOFRAME = 'VideoFrame'
-TEXTURE_GREEN = 'green'
-TEXTURE_YELLOW = 'yellow'
-TEXTURE_BLUE = 'blue'
-TEXTURE_PINK = 'pink'
+TEXTURE_FRONT = 'front'
+TEXTURE_RIGHT = 'right'
+TEXTURE_BACK = 'back'
+TEXTURE_LEFT = 'left'
+TEXTURE_TOP = 'top'
 

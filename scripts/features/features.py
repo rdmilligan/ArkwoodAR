@@ -49,7 +49,7 @@ class Features:
                                 (self.media_cube.detect(image_one),
                                  self.media_cube.detect(image_two)))
 
-        if self.secret_item:
+        elif self.secret_item:
             detection = self._manage_cache('secretitem', 
                                 (self.secret_item.detect(image_one),
                                  self.secret_item.detect(image_two)))

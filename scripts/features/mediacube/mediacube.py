@@ -23,7 +23,7 @@ class MediaCube:
         self.markers = Markers()
 
         # initialise textures
-        self.textures = self._load_textures()
+        self.marker_one_textures, self.marker_two_textures = self._load_textures()
 
         # initialise video
         self.video_capture = cv2.VideoCapture()
@@ -66,38 +66,41 @@ class MediaCube:
             glLoadMatrixd(view_matrix)
 
             if marker_name == MARKER_ONE:
-                self._draw_cube(marker_rotation)
+                self.marker_one_textures[TEXTURE_FRONT] = cv2.flip(self._get_video_frame(), 0)
+                self._draw_cube(marker_rotation, self.marker_one_textures)
             elif marker_name == MARKER_TWO:
-                self._draw_cube(marker_rotation)
+                self._draw_cube(marker_rotation, self.marker_two_textures)
 
             glColor3f(1.0, 1.0, 1.0)
             glPopMatrix()
 
     def _load_textures(self):
-        textures = {}
+        marker_one_textures = {}
+        marker_two_textures = {}
 
-        # load textures for cube
-        textures[TEXTURE_VIDEOFRAME] = None
-        textures[TEXTURE_GREEN] = cv2.imread('{}green.png'.format(self.FILE_PATH))
-        textures[TEXTURE_YELLOW] = cv2.imread('{}yellow.png'.format(self.FILE_PATH))
-        textures[TEXTURE_BLUE] = cv2.imread('{}blue.png'.format(self.FILE_PATH))
-        textures[TEXTURE_PINK] = cv2.imread('{}pink.png'.format(self.FILE_PATH))
+        # load images
+        image_green = cv2.imread('{}green.png'.format(self.FILE_PATH))
+        image_yellow = cv2.imread('{}yellow.png'.format(self.FILE_PATH))
+        image_blue = cv2.imread('{}blue.png'.format(self.FILE_PATH))
+        image_pink = cv2.imread('{}pink.png'.format(self.FILE_PATH))
+        image_saltwash = np.rot90(cv2.imread('{}saltwash.jpg'.format(self.FILE_PATH)), 2)
+        image_halo = np.rot90(cv2.imread('{}halo.jpg'.format(self.FILE_PATH)), 2)
 
-        return textures
- 
-    def _draw_cube(self, marker_rotation):
+        # load textures for marker one
+        marker_one_textures[TEXTURE_FRONT] = None
+        marker_one_textures[TEXTURE_RIGHT] = image_green
+        marker_one_textures[TEXTURE_BACK] = image_yellow
+        marker_one_textures[TEXTURE_LEFT] = image_blue
+        marker_one_textures[TEXTURE_TOP] = image_pink
 
-        self.textures[TEXTURE_VIDEOFRAME] = cv2.flip(self._get_video_frame(), 0)
+        # load textures for marker two
+        marker_two_textures[TEXTURE_FRONT] = image_saltwash
+        marker_two_textures[TEXTURE_RIGHT] = image_green
+        marker_two_textures[TEXTURE_BACK] = image_halo
+        marker_two_textures[TEXTURE_LEFT] = image_blue
+        marker_two_textures[TEXTURE_TOP] = image_pink
 
-        # draw cube
-        if marker_rotation == 0:
-            cube_degrees_0(self.textures)
-        elif marker_rotation == 1:
-            cube_degrees_90(self.textures)
-        elif marker_rotation == 2:
-            cube_degrees_180(self.textures)
-        elif marker_rotation == 3:
-            cube_degrees_270(self.textures)
+        return (marker_one_textures, marker_two_textures)
 
     def _get_video_frame(self):
 
@@ -112,3 +115,14 @@ class MediaCube:
 
         return self.video_capture.read()[1]
 
+    def _draw_cube(self, marker_rotation, marker_textures):
+
+        # draw cube
+        if marker_rotation == 0:
+            cube_degrees_0(marker_textures)
+        elif marker_rotation == 1:
+            cube_degrees_90(marker_textures)
+        elif marker_rotation == 2:
+            cube_degrees_180(marker_textures)
+        elif marker_rotation == 3:
+            cube_degrees_270(marker_textures)
